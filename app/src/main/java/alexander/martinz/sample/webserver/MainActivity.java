@@ -16,7 +16,10 @@
 
 package alexander.martinz.sample.webserver;
 
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.content.ContextCompat;
@@ -31,6 +34,7 @@ import android.widget.TextView;
 
 import java.io.IOException;
 
+import alexander.martinz.libs.webserver.NetworkInfo;
 import alexander.martinz.libs.webserver.WebServerCallbacks;
 import alexander.martinz.libs.webserver.routers.DefaultRouter;
 import butterknife.Bind;
@@ -101,14 +105,46 @@ public class MainActivity extends AppCompatActivity implements WebServerCallback
         });
     }
 
-    @Override public Context getContext() {
-        return getApplicationContext();
-    }
-
     @Override protected void onDestroy() {
         if (webServer != null) {
             webServer.stop();
         }
         super.onDestroy();
+    }
+
+    @Override protected void onPause() {
+        super.onPause();
+        unregisterReceivers();
+    }
+
+    @Override protected void onResume() {
+        super.onResume();
+        registerReceivers();
+    }
+
+    private void registerReceivers() {
+        final IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction("android.net.wifi.WIFI_STATE_CHANGED");
+        intentFilter.addAction("android.net.wifi.STATE_CHANGE");
+        registerReceiver(broadcastReceiver, intentFilter);
+    }
+
+    private void unregisterReceivers() {
+        try {
+            unregisterReceiver(broadcastReceiver);
+        } catch (Exception ignored) { }
+    }
+
+    private final BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
+        @Override public void onReceive(Context context, Intent intent) {
+            if (tvIpAddress != null) {
+                final String ip = NetworkInfo.getAnyIpAddress(context);
+                tvIpAddress.setText(String.format("http://%s:", ip));
+            }
+        }
+    };
+
+    @Override public Context getContext() {
+        return getApplicationContext();
     }
 }
