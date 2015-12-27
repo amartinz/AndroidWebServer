@@ -330,12 +330,30 @@ public class RouterNanoHTTPD extends NanoHTTPD {
 
         private final Class<?> handler;
 
+        private final Object handlerObject;
+
         private final Object[] initParameter;
 
         private List<String> uriParams = new ArrayList<String>();
 
+        public UriResource(String uri, int priority, Object handlerObject, Object... initParameter) {
+            this.handler = null;
+            this.handlerObject = handlerObject;
+            this.initParameter = initParameter;
+            if (uri != null) {
+                this.uri = normalizeUri(uri);
+                parse();
+                this.uriPattern = createUriPattern();
+            } else {
+                this.uriPattern = null;
+                this.uri = null;
+            }
+            this.priority = priority + uriParams.size() * 1000;
+        }
+
         public UriResource(String uri, int priority, Class<?> handler, Object... initParameter) {
             this.handler = handler;
+            this.handlerObject = null;
             this.initParameter = initParameter;
             if (uri != null) {
                 this.uri = normalizeUri(uri);
@@ -368,9 +386,9 @@ public class RouterNanoHTTPD extends NanoHTTPD {
 
         public Response process(Map<String, String> urlParams, IHTTPSession session) {
             String error = "General error!";
-            if (handler != null) {
+            if (handlerObject != null || handler != null) {
                 try {
-                    Object object = handler.newInstance();
+                    Object object = ((handlerObject != null) ? handlerObject : handler.newInstance());
                     if (object instanceof UriResponder) {
                         UriResponder responder = (UriResponder) object;
                         switch (session.getMethod()) {
@@ -462,7 +480,7 @@ public class RouterNanoHTTPD extends NanoHTTPD {
          * is www.example.com/user/help - mapping 2 is returned if the incoming
          * uri is www.example.com/user/3232 - mapping 1 is returned
          * 
-         * @param url
+         * @param session
          * @return
          */
         public Response process(IHTTPSession session) {
@@ -483,6 +501,17 @@ public class RouterNanoHTTPD extends NanoHTTPD {
             if (url != null) {
                 if (handler != null) {
                     mappings.add(new UriResource(url, priority + mappings.size(), handler, initParameter));
+                } else {
+                    mappings.add(new UriResource(url, priority + mappings.size(), notImplemented));
+                }
+                sortMappings();
+            }
+        }
+
+        private void addRoute(String url, int priority, Object handlerObject, Object... initParameter) {
+            if (url != null) {
+                if (handlerObject != null) {
+                    mappings.add(new UriResource(url, priority + mappings.size(), handlerObject, initParameter));
                 } else {
                     mappings.add(new UriResource(url, priority + mappings.size(), notImplemented));
                 }
@@ -546,6 +575,10 @@ public class RouterNanoHTTPD extends NanoHTTPD {
 
     public void addRoute(String url, Class<?> handler, Object... initParameter) {
         router.addRoute(url, 100, handler, initParameter);
+    }
+
+    public void addRoute(String url, Object handlerObject, Object... initParameter) {
+        router.addRoute(url, 100, handlerObject, initParameter);
     }
 
     public void removeRoute(String url) {
