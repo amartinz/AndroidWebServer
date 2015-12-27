@@ -34,6 +34,7 @@ import android.widget.TextView;
 
 import java.io.IOException;
 
+import alexander.martinz.libs.webserver.Config;
 import alexander.martinz.libs.webserver.NetworkInfo;
 import alexander.martinz.libs.webserver.WebServerCallbacks;
 import alexander.martinz.libs.webserver.routers.DefaultRouter;
@@ -53,6 +54,9 @@ public class MainActivity extends AppCompatActivity implements WebServerCallback
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
+
+        // enable debugging
+        Config.DEBUG = true;
 
         etPort.addTextChangedListener(new TextWatcher() {
             @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) { }

@@ -188,8 +188,7 @@ public class RouterNanoHTTPD extends NanoHTTPD {
                     pathArray.add(s);
             }
 
-            return pathArray.toArray(new String[]{});
-
+            return pathArray.toArray(new String[pathArray.size()]);
         }
 
         @Override
@@ -302,7 +301,7 @@ public class RouterNanoHTTPD extends NanoHTTPD {
 
     public static String normalizeUri(String value) {
         if (value == null) {
-            return value;
+            return null;
         }
         if (value.startsWith("/")) {
             value = value.substring(1);

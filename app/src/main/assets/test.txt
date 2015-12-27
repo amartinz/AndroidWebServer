@@ -1,0 +1,1 @@
+If you can read this, it successfully loaded this file from assets.

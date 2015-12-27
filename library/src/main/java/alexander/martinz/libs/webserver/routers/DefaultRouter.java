@@ -20,10 +20,12 @@ import android.support.annotation.NonNull;
 
 import alexander.martinz.libs.webserver.BuildConfig;
 import alexander.martinz.libs.webserver.WebServerCallbacks;
+import alexander.martinz.libs.webserver.handlers.StaticAssetHandler;
 import alexander.martinz.libs.webserver.handlers.StaticStringHandler;
 import fi.iki.elonen.router.RouterNanoHTTPD;
 
 public class DefaultRouter extends RouterNanoHTTPD {
+    private static final String ROUTE_ASSETS = "/assets/(.)+";
     private static final String ROUTE_VERSION = "/version";
 
     private final WebServerCallbacks webServerCallbacks;
@@ -38,7 +40,8 @@ public class DefaultRouter extends RouterNanoHTTPD {
     @Override public void addMappings() {
         super.addMappings();
 
-        addRoute(ROUTE_VERSION, VersionHandler.class);
+        addRoute(ROUTE_ASSETS, new StaticAssetHandler(webServerCallbacks));
+        addRoute(ROUTE_VERSION, new VersionHandler());
     }
 
     public static class VersionHandler extends StaticStringHandler {
