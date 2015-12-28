@@ -20,6 +20,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.content.ContextCompat;
@@ -58,6 +59,16 @@ public class MainActivity extends AppCompatActivity implements WebServerCallback
         // enable debugging
         Config.DEBUG = true;
 
+        final CustomTabsHelper customTabsHelper = new CustomTabsHelper(getApplicationContext());
+        customTabsHelper.warmup();
+
+        tvIpAddress.setOnClickListener(new View.OnClickListener() {
+            @Override public void onClick(View v) {
+                customTabsHelper.launchUrl(MainActivity.this, buildUrl());
+            }
+        });
+        tvIpAddress.setEnabled(false);
+
         etPort.addTextChangedListener(new TextWatcher() {
             @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
 
@@ -81,6 +92,7 @@ public class MainActivity extends AppCompatActivity implements WebServerCallback
                 fabToggle.setEnabled(valid);
             }
         });
+        etPort.setEnabled(true);
 
         fabToggle.setOnClickListener(new View.OnClickListener() {
             @Override public void onClick(View v) {
@@ -94,6 +106,11 @@ public class MainActivity extends AppCompatActivity implements WebServerCallback
 
                     fabToggle.setImageResource(R.drawable.ic_portable_wifi_off_black_24dp);
                     fabToggle.setBackgroundTintList(ContextCompat.getColorStateList(MainActivity.this, R.color.button_off));
+
+                    tvIpAddress.setTextColor(Color.WHITE);
+                    tvIpAddress.setEnabled(false);
+                    etPort.setTextColor(Color.WHITE);
+                    etPort.setEnabled(true);
                 } else {
                     try {
                         webServer.start();
@@ -104,9 +121,22 @@ public class MainActivity extends AppCompatActivity implements WebServerCallback
 
                     fabToggle.setImageResource(R.drawable.ic_wifi_tethering_black_24dp);
                     fabToggle.setBackgroundTintList(ContextCompat.getColorStateList(MainActivity.this, R.color.button_on));
+
+                    final int color = ContextCompat.getColor(MainActivity.this, R.color.button_on);
+                    tvIpAddress.setTextColor(color);
+                    tvIpAddress.setEnabled(true);
+                    etPort.setTextColor(color);
+                    etPort.setEnabled(false);
+
+                    customTabsHelper.mayLaunchUrl(buildUrl());
                 }
             }
         });
+    }
+
+    private String buildUrl() {
+        // http://localhost: + 8080
+        return String.format("%s%s", tvIpAddress.getText(), etPort.getText().toString());
     }
 
     @Override protected void onDestroy() {
