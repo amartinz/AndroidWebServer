@@ -1,0 +1,31 @@
+<!--
+  ~ Copyright 2015 Alexander Martinz
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~       http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
+<html>
+<head></head>
+<body>
+<h1>Welcome to the WebServer sample!</h1>
+<p>If you have directory listing enabled, check out <a href="/assets/folder">folder</a> to check, if it is working!</p>
+<p>Additionally, you can also check out the basic <a href="/assets/test.txt">test file</a> as test files are awesome.</p>
+<hr>
+<p>
+    You may wonder why the url of the linked files and this file differs.<br/>That is pretty easy, the sample uses a router
+    to link handlers to specific routes.<br/>The <i>/assets/</i> path is linked to a <b>StaticAssetHandler</b>, which serves files
+    from the assets directory of the phone, while <i>/</i> and <i>/index.html</i> are statically linked to the assets/index.html
+    file of the phone.
+</p>
+</body>
+</html>

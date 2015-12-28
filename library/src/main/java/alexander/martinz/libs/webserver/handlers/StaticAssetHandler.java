@@ -18,6 +18,7 @@ package alexander.martinz.libs.webserver.handlers;
 
 import android.content.res.AssetManager;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -35,9 +36,15 @@ public class StaticAssetHandler extends RouterNanoHTTPD.StaticPageHandler {
     private static final String TAG = StaticAssetHandler.class.getSimpleName();
 
     private final AssetManager assetManager;
+    private final String staticFileName;
 
     public StaticAssetHandler(@NonNull WebServerCallbacks webServerCallbacks) {
+        this(webServerCallbacks, null);
+    }
+
+    public StaticAssetHandler(@NonNull WebServerCallbacks webServerCallbacks, @Nullable String staticFileName) {
         this.assetManager = webServerCallbacks.getContext().getAssets();
+        this.staticFileName = staticFileName;
     }
 
     private InputStream openAsset(String fileName) throws IOException {
@@ -49,8 +56,24 @@ public class StaticAssetHandler extends RouterNanoHTTPD.StaticPageHandler {
         return assetManager.open(fileName, AssetManager.ACCESS_BUFFER);
     }
 
+    private NanoHTTPD.Response createChunkedResponse(InputStream inputStream, String fileName) {
+        final BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream);
+        return NanoHTTPD.newChunkedResponse(getStatus(), RouterNanoHTTPD.getMimeTypeForFile(fileName), bufferedInputStream);
+    }
+
     @Override
     public NanoHTTPD.Response get(RouterNanoHTTPD.UriResource res, Map<String, String> params, NanoHTTPD.IHTTPSession session) {
+        if (!TextUtils.isEmpty(staticFileName)) {
+            if (Config.DEBUG) {
+                Log.d(TAG, "serving static file: " + staticFileName);
+            }
+            try {
+                return createChunkedResponse(openAsset(staticFileName), staticFileName);
+            } catch (IOException ioe) {
+                throw new RuntimeException("Check your setup!");
+            }
+        }
+
         final String sessionUri = session.getUri();
         final String baseUri = res.getUri();
 
@@ -72,6 +95,9 @@ public class StaticAssetHandler extends RouterNanoHTTPD.StaticPageHandler {
         InputStream inputStream;
         try {
             inputStream = openAsset(assetUri);
+            if (Config.DEBUG) {
+                Log.d(TAG, "opened asset: " + assetUri);
+            }
         } catch (IOException ioe) {
             // if directory listing is disabled, end here
             if (!Config.ENABLE_ASSETS_DIRECTORY_LISTING) {
@@ -87,11 +113,7 @@ public class StaticAssetHandler extends RouterNanoHTTPD.StaticPageHandler {
         }
 
         // if we found the asset, wrap it around a buffered input stream
-        final BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream);
-        if (Config.DEBUG) {
-            Log.d(TAG, "opened asset: " + assetUri);
-        }
-        return NanoHTTPD.newChunkedResponse(getStatus(), RouterNanoHTTPD.getMimeTypeForFile(assetUri), bufferedInputStream);
+        return createChunkedResponse(inputStream, assetUri);
     }
 
     private String tryListFiles(String fullPath, String assetPath) {

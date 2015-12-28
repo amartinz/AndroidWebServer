@@ -550,7 +550,7 @@ public class RouterNanoHTTPD extends NanoHTTPD {
 
     }
 
-    private UriRouter router;
+    protected UriRouter router;
 
     public RouterNanoHTTPD(int port) {
         super(port);

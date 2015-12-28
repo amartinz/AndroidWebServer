@@ -25,6 +25,9 @@ import alexander.martinz.libs.webserver.handlers.StaticStringHandler;
 import fi.iki.elonen.router.RouterNanoHTTPD;
 
 public class DefaultRouter extends RouterNanoHTTPD {
+    private static final String ROUTE_INDEX = "/";
+    private static final String ROUTE_INDEX_HTML = "/index.html";
+
     private static final String ROUTE_ASSETS = "/assets/(.)+";
     private static final String ROUTE_VERSION = "/version";
 
@@ -38,7 +41,14 @@ public class DefaultRouter extends RouterNanoHTTPD {
     }
 
     @Override public void addMappings() {
-        super.addMappings();
+        router.setNotImplemented(NotImplementedHandler.class);
+        router.setNotFoundHandler(Error404UriHandler.class);
+
+        final StaticAssetHandler staticIndexHandler = new StaticAssetHandler(webServerCallbacks, "index.html");
+
+        // handle / and /index.html
+        addRoute(ROUTE_INDEX, staticIndexHandler);
+        addRoute(ROUTE_INDEX_HTML, staticIndexHandler);
 
         addRoute(ROUTE_ASSETS, new StaticAssetHandler(webServerCallbacks));
         addRoute(ROUTE_VERSION, new VersionHandler());
