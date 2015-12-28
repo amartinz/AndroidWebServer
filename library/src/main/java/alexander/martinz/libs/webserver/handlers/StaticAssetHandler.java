@@ -37,14 +37,21 @@ public class StaticAssetHandler extends RouterNanoHTTPD.StaticPageHandler {
 
     private final AssetManager assetManager;
     private final String staticFileName;
+    private final boolean isDirectory;
 
     public StaticAssetHandler(@NonNull WebServerCallbacks webServerCallbacks) {
         this(webServerCallbacks, null);
     }
 
     public StaticAssetHandler(@NonNull WebServerCallbacks webServerCallbacks, @Nullable String staticFileName) {
+        this(webServerCallbacks, staticFileName, false);
+    }
+
+    public StaticAssetHandler(@NonNull WebServerCallbacks webServerCallbacks, @Nullable String staticFileName,
+            boolean isDirectory) {
         this.assetManager = webServerCallbacks.getContext().getAssets();
         this.staticFileName = staticFileName;
+        this.isDirectory = isDirectory;
     }
 
     private InputStream openAsset(String fileName) throws IOException {
@@ -63,7 +70,11 @@ public class StaticAssetHandler extends RouterNanoHTTPD.StaticPageHandler {
 
     @Override
     public NanoHTTPD.Response get(RouterNanoHTTPD.UriResource res, Map<String, String> params, NanoHTTPD.IHTTPSession session) {
-        if (!TextUtils.isEmpty(staticFileName)) {
+        if (isDirectory) {
+            if (Config.DEBUG) {
+                Log.d(TAG, "serving static from directory: " + staticFileName);
+            }
+        } else if (!TextUtils.isEmpty(staticFileName)) {
             if (Config.DEBUG) {
                 Log.d(TAG, "serving static file: " + staticFileName);
             }
@@ -85,6 +96,22 @@ public class StaticAssetHandler extends RouterNanoHTTPD.StaticPageHandler {
             if (baseUri.charAt(index) != assetUri.charAt(index)) {
                 assetUri = assetUri.substring(index);
                 break;
+            }
+        }
+
+        if (isDirectory) {
+            // if we are not already both eg "polymer" or "polymer/"
+            if (!staticFileName.equals(assetUri) && !staticFileName.equals(assetUri + "/")) {
+                assetUri = String.format("%s/%s", staticFileName, assetUri);
+            }
+
+            if (assetUri.endsWith(staticFileName) || assetUri.endsWith(staticFileName + "/")) {
+                final int length = assetUri.endsWith("/") ? staticFileName.length() + 1 : staticFileName.length();
+                assetUri = assetUri.substring(0, assetUri.length() - length);
+
+                if (assetUri.endsWith("/") || assetUri.equals(staticFileName) || assetUri.equals(staticFileName + "/")) {
+                    assetUri = String.format("%s/index.html", staticFileName);
+                }
             }
         }
 

@@ -544,6 +544,10 @@ public class RouterNanoHTTPD extends NanoHTTPD {
             error404Url = new UriResource(null, 100, handler);
         }
 
+        public void setNotFoundHandler(Object handlerObject) {
+            error404Url = new UriResource(null, 100, handlerObject);
+        }
+
         public void setNotImplemented(Class<?> handler) {
             notImplemented = handler;
         }

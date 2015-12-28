@@ -26,9 +26,12 @@ import fi.iki.elonen.router.RouterNanoHTTPD;
 
 public class DefaultRouter extends RouterNanoHTTPD {
     private static final String ROUTE_INDEX = "/";
+    private static final String ROUTE_INDEX_ALL = "/(.)+";
     private static final String ROUTE_INDEX_HTML = "/index.html";
+    private static final String ROUTE_FAVICON = "/favicon.ico";
 
-    private static final String ROUTE_ASSETS = "/assets/(.)+";
+    private static final String ROUTE_ASSETS = "/assets/";
+    private static final String ROUTE_ASSETS_ALL = "/assets/(.)+";
     private static final String ROUTE_VERSION = "/version";
 
     private final WebServerCallbacks webServerCallbacks;
@@ -44,14 +47,21 @@ public class DefaultRouter extends RouterNanoHTTPD {
         router.setNotImplemented(NotImplementedHandler.class);
         router.setNotFoundHandler(Error404UriHandler.class);
 
-        final StaticAssetHandler staticIndexHandler = new StaticAssetHandler(webServerCallbacks, "index.html");
+        final StaticAssetHandler staticAssetHandler = new StaticAssetHandler(webServerCallbacks, "assets", true);
+        addRoute(ROUTE_ASSETS, staticAssetHandler);
+        addRoute(ROUTE_ASSETS_ALL, staticAssetHandler);
+        addRoute(ROUTE_VERSION, new VersionHandler());
 
         // handle / and /index.html
+        final StaticAssetHandler staticIndexHandler = new StaticAssetHandler(webServerCallbacks, "index.html");
+        final StaticAssetHandler staticFavIconHandler = new StaticAssetHandler(webServerCallbacks, "favicon.ico");
         addRoute(ROUTE_INDEX, staticIndexHandler);
         addRoute(ROUTE_INDEX_HTML, staticIndexHandler);
+        addRoute(ROUTE_FAVICON, staticFavIconHandler);
 
-        addRoute(ROUTE_ASSETS, new StaticAssetHandler(webServerCallbacks));
-        addRoute(ROUTE_VERSION, new VersionHandler());
+        // handle index wildcard last, as it matches all
+        final StaticAssetHandler staticAssetHandlerGeneric = new StaticAssetHandler(webServerCallbacks);
+        addRoute(ROUTE_INDEX_ALL, staticAssetHandlerGeneric);
     }
 
     public static class VersionHandler extends StaticStringHandler {
